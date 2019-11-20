@@ -1,0 +1,17 @@
+{
+  "name": "crypto-trading",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "aws-sdk": "^2.548.0",
+    "ccxt": "^1.18.1259"
+  },
+  "devDependencies": {
+    "eslint": "^6.5.1",
+    "eslint-config-lambdas": "^0.2.5",
+    "serverless-dynamodb-local": "^0.2.38",
+    "serverless-offline": "^5.12.0",
+    "serverless-plugin-warmup": "^4.7.0-rc.1"
+  }
+}

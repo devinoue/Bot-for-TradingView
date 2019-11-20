@@ -1,0 +1,71 @@
+
+
+service: crypto-trading
+
+provider:
+  name: aws
+  region: ap-northeast-1
+  runtime: nodejs10.x
+  stage: ${self:custom.stage}
+
+custom:
+  stage: ${opt:stage,"dev"}
+  env:
+    dev: ${file(./config/dev.yml)}
+  dynamodb:
+    start:
+      port: 8000
+      inMemory: true
+
+plugins: 
+  - serverless-offline
+  #- serverless-plugin-warmup
+  - serverless-dynamodb-local
+
+iamRoleStatements:
+  - Effect: 'Allow'
+    Action:
+      - 'lambda:InvokeFunction'
+    Resource:
+    - Fn::Join:
+      - ':'
+      - - arn:aws:lambda
+        - Ref: AWS::Region
+        - Ref: AWS::AccountId
+        - function:${self:service}-${opt:stage, self:provider.stage}-*
+
+
+
+functions:
+  # WEBフックの性質上、postのみ。
+  createOrder:
+    # コールドスタート対策用
+    warmup: true
+    handler: functions/orders/create.main
+    timeout: 120
+    description: WEBフックからデータを取得して売買する
+    environment:
+      TRADING_BOT_TABLE: ${self:custom.env.${self:custom.stage}.TRADING_BOT_TABLE}
+      API_KEY: ${self:custom.env.${self:custom.stage}.API_KEY}
+      API_SECRET: ${self:custom.env.${self:custom.stage}.API_SECRET}
+      ADMIN_EMAIL_ADDRESS: ${self:custom.env.${self:custom.stage}.ADMIN_EMAIL_ADDRESS}
+      ORDER_SIZE: 0.01
+      IN_ACTION: action
+    events:
+      - http:
+          path: '/orders/{side}'
+          method: post
+          cors: true
+
+
+
+
+package:
+  excludeDevDependencies: true
+  exclude:
+    - .**
+    - .**/*
+    - README.md
+    #- package.json
+    - yarn.lock
+    - node_modules/**
